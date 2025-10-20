@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Interativo de Cirurgia do TGI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Clinical & Calm -->
+    <!-- Application Structure Plan: A two-column layout with a fixed, interactive anatomical navigation sidebar. Clicking a segment of the GI tract dynamically displays the detailed content for that section in the main panel. This structure was chosen to mirror the anatomical flow of the subject matter, providing an intuitive and non-linear way for a student to quickly jump between topics without scrolling through a long document. It includes a "Spotlight" section for the critical SDVG emergency, a comparative chart for surgical principles, and a new summary table of procedures. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Anatomical sections of the TGI. Goal: Organize/Navigate. Viz: A stylized, vertical diagram of the TGI tract built with HTML/CSS. Interaction: Clickable segments that highlight and trigger content updates. Justification: More intuitive and engaging than a simple text menu for anatomical content. Method: Vanilla JS, HTML/Tailwind.
+        - Report Info: Surgical principles (suture layers). Goal: Compare. Viz: Horizontal Bar Chart. Interaction: Tooltips on hover provide rationale. Justification: Visually contrasts the critical differences in surgical techniques between organs, making it easier to memorize. Library: Chart.js/Canvas.
+        - Report Info: SDVG emergency procedure. Goal: Inform/Organize. Viz: Numbered step-by-step list in a highlighted "Spotlight" card. Interaction: Static but visually distinct. Justification: Emphasizes the critical, sequential nature of the emergency protocol. Method: HTML/Tailwind.
+        - Report Info: Summary of surgical procedures. Goal: Organize/Compare. Viz: Styled HTML table. Interaction: Static. Justification: Provides a quick, scannable reference of key surgical information. Method: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #343A40;
+        }
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+            border-left: 4px solid transparent;
+        }
+        .nav-item:hover {
+            background-color: #E9ECEF;
+            border-left-color: #CED4DA;
+        }
+        .nav-item.active {
+            background-color: #E7F5FF;
+            border-left-color: #339AF0;
+            color: #1971C2;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .spotlight-card {
+            background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%);
+            border-color: #FFEC99;
+        }
+        .content-section h3 {
+            color: #1864AB;
+        }
+        .content-section h4 {
+            color: #1971C2;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 lg:w-72 bg-white border-r border-gray-200 p-6 md:sticky md:top-0 md:self-start">
+            <h1 class="text-2xl font-bold text-gray-800 mb-8">Guia de Cirurgia do TGI</h1>
+            <nav id="tgi-nav" class="space-y-2">
+                <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700 active" data-target="oral">
+                    <span class="mr-3 text-lg">👄</span> Cavidade Oral
+                </a>
+                <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="esofago">
+                    <span class="mr-3 text-lg">🦒</span> Esôfago
+                </a>
+                <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="estomago">
+                    <span class="mr-3 text-lg">🥐</span> Estômago
+                </a>
+                <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="intestinos">
+                    <span class="mr-3 text-lg">〰️</span> Intestinos
+                </a>
+                <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="anal">
+                    <span class="mr-3 text-lg">🍑</span> Intestino Grosso e Reg. Anal
+                </a>
+                 <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="sutura">
+                    <span class="mr-3 text-lg">📊</span> Princípios de Sutura
+                </a>
+                 <a href="#" class="nav-item flex items-center p-3 rounded-lg text-gray-700" data-target="tabela">
+                    <span class="mr-3 text-lg">📋</span> Tabela de Procedimentos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10">
+            <!-- Oral Cavity Section -->
+            <section id="oral" class="content-section">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Cavidade Oral</h2>
+                <div class="space-y-10">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Fístula Oronasal (Congênita e Adquirida)</h3>
+                        <div class="space-y-2">
+                            <h4>Manifestações Clínicas</h4>
+                            <p>Na fenda congênita, observam-se regurgitação nasal de leite, tosse e espirros durante a amamentação, e déficit de crescimento. Na fístula adquirida, o sinal principal é a rinorreia crônica unilateral (serosa a mucopurulenta) e espirros, principalmente após alimentação.</p>
+                            
+                            <h4>Exame Físico e Exames Complementares</h4>
+                            <p>O diagnóstico é confirmado pela inspeção visual da cavidade oral. A sondagem delicada do trajeto com uma sonda periodontal confirma a comunicação. O diagnóstico definitivo e o planejamento cirúrgico exigem <strong>exames de imagem</strong>, como <strong>radiografias intraorais</strong> ou <strong>tomografia computadorizada</strong>, para avaliar a extensão da perda óssea e a condição dos dentes adjacentes.</p>
+                            
+                            <h4>Tratamento e Técnica Cirúrgica</h4>
+                            <p>O tratamento é cirúrgico, com o objetivo de criar um fechamento hermético e sem tensão através de <strong>retalhos mucoperiosteais</strong>. A técnica envolve debridar as margens da fístula, criar incisões de relaxamento no periósteo e deslizar o retalho sobre o defeito. O pós-operatório exige dieta líquida/pastosa por 2-3 semanas. O prognóstico é bom, mas a deiscência é a principal complicação.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="space-y-2">
+                            <h3 class="text-2xl font-semibold mb-4">Mucoceles Salivares (Sialoceles)</h3>
+                            <h4>Manifestações Clínicas</h4>
+                            <p>Apresenta-se como um aumento de volume flutuante e indolor. A localização determina os sinais: cervical (massa no pescoço), rânula (sublingual, pode causar disfagia) ou faríngea (pode causar dispneia aguda).</p>
+                            
+                            <h4>Exame Físico e Exames Complementares</h4>
+                            <p>Na palpação, a massa é macia e não aderida. Colocar o animal em decúbito dorsal pode ajudar a identificar o lado afetado em mucoceles cervicais. O diagnóstico é confirmado pela <strong>paracentese</strong>, que revela um fluido viscoso, claro ou sanguinolento, consistente com saliva.</p>
+
+                            <h4>Tratamento e Técnica Cirúrgica</h4>
+                            <p>O tratamento de eleição é a <strong>sialoadenectomia</strong> (excisão completa das glândulas mandibular e sublingual ipsilaterais). A dissecção é feita cuidadosamente para isolar o complexo glandular dos vasos e nervos adjacentes. O prognóstico é excelente com a remoção completa.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Esophagus Section -->
+            <section id="esofago" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Esôfago</h2>
+                 <div class="space-y-10">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Obstrução Esofágica</h3>
+                        <div class="space-y-2">
+                            <h4>Manifestações Clínicas</h4>
+                            <p>O sinal cardinal é a <strong>regurgitação</strong>, uma expulsão passiva de alimento não digerido. Outros sinais incluem ptialismo (hipersalivação), odinofagia (dor ao deglutir), múltiplas tentativas de deglutição e tosse (por aspiração).</p>
+                            
+                            <h4>Exame Físico e Exames Complementares</h4>
+                            <p>A palpação da região cervical ventral pode revelar o corpo estranho. A auscultação torácica é crucial para detectar sons anormais sugestivos de pneumonia aspirativa. O diagnóstico é confirmado por <strong>radiografias torácicas</strong> (simples e contrastadas com sulfato de bário) e <strong>endoscopia</strong>, que é o padrão-ouro.</p>
+
+                            <h4>Tratamento e Técnica Cirúrgica</h4>
+                            <p>A remoção endoscópica é a primeira escolha. A <strong>esofagotomia</strong> cirúrgica (acesso cervical ventral ou toracotomia intercostal) é reservada para casos de perfuração ou falha na endoscopia. A sutura é feita em dois planos. O prognóstico é bom em remoções simples, mas reservado se houver mediastinite ou estenose.</p>
+                       </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stomach Section -->
+            <section id="estomago" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Estômago</h2>
+                <div class="space-y-10">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Obstrução por Corpo Estranho</h3>
+                        <h4>Manifestações Clínicas</h4>
+                        <p>Êmese (vômito) é o sinal principal, podendo ser agudo ou crônico. Outros sinais incluem anorexia, letargia e dor abdominal.</p>
+                        
+                        <h4>Exame Físico e Exames Complementares</h4>
+                        <p>A palpação abdominal pode revelar desconforto epigástrico. <strong>Exames complementares</strong> como <strong>radiografias abdominais</strong> (simples ou contrastadas) e <strong>ultrassonografia</strong> são fundamentais. Exames de sangue podem revelar alcalose metabólica hipoclorêmica devido à perda de ácido clorídrico no vômito.</p>
+
+                        <h4>Tratamento e Técnica Cirúrgica</h4>
+                        <p>A remoção cirúrgica por <strong>gastrotomia</strong> é o tratamento de escolha. A incisão é feita em área avascular do corpo gástrico e o fechamento é em <strong>dois planos (dupla camada)</strong> com padrão invaginante (ex: Cushing e Lembert). O prognóstico é excelente se não houver perfuração.</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-6 rounded-xl border-2 border-yellow-300 shadow-md spotlight-card">
+                        <h3 class="text-2xl font-bold text-yellow-800 mb-4">🚨 Emergência: Síndrome da Dilatação-Vólvulo Gástrico (SDVG)</h3>
+                         <div class="space-y-2">
+                            <h4>Manifestações Clínicas</h4>
+                            <p>Quadro hiperagudo com distensão abdominal timpânica progressiva, mímicas de vômito improdutivas, ptialismo, inquietação e sinais de choque circulatório (taquicardia, pulso filiforme, mucosas pálidas, TPC > 2s).</p>
+                            
+                            <h4>Exame Físico e Exames Complementares</h4>
+                            <p>A percussão abdominal revela um som timpânico ("de tambor"). A <strong>radiografia em decúbito lateral direito</strong> é patognomônica, revelando a imagem de "C reverso". <strong>Exames complementares</strong> como ECG, hemogasometria e dosagem de lactato sérico são vitais. Lactato > 6 mmol/L é um indicador de mau prognóstico.</p>
+
+                            <h4>Tratamento e Técnica Cirúrgica</h4>
+                            <p>Baseia-se em 3 pilares: <strong>1) Estabilização do choque</strong> com fluidoterapia agressiva; <strong>2) Descompressão gástrica</strong> emergencial; <strong>3) Cirurgia</strong> após estabilização, para reposicionar o estômago e realizar a <strong>gastropexia incisional</strong>. O prognóstico é sempre reservado, com mortalidade de 10-50%.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Intestines Section -->
+            <section id="intestinos" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Intestinos (Delgado)</h2>
+                <div class="space-y-10">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Obstrução por Corpo Estranho</h3>
+                        <h4>Manifestações Clínicas</h4>
+                        <p>Êmese, anorexia, prostração e dor abdominal. Diarreia pode ocorrer em obstruções parciais. Em corpos estranhos lineares, os sinais podem ser mais severos e agudos.</p>
+                        
+                        <h4>Exame Físico e Exames Complementares</h4>
+                        <p>A palpação abdominal pode revelar dor focal, alças intestinais espessadas ou o intestino "franzido" (plicatura). <strong>Radiografias</strong> (padrão de empilhamento de alças com gás) e <strong>ultrassonografia</strong> (visualização direta do objeto e do peristaltismo) são os principais exames complementares.</p>
+
+                        <h4>Tratamento e Técnica Cirúrgica</h4>
+                        <p>O tratamento é cirúrgico. A <strong>enterotomia</strong> é indicada para corpos estranhos únicos em intestino viável. A <strong>enterectomia com anastomose</strong> é indicada para tecidos inviáveis, tumores ou múltiplas lesões por corpo estranho linear. A sutura é em plano único, aposicional. O prognóstico é bom se tratado precocemente, mas reservado se houver peritonite.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Intussuscepção</h3>
+                        <h4>Manifestações Clínicas</h4>
+                        <p>Êmese, diarreia (às vezes com hematoquezia, "geleia de framboesa"), dor abdominal e anorexia, especialmente em filhotes.</p>
+                        
+                        <h4>Exame Físico e Exames Complementares</h4>
+                        <p>A palpação abdominal pode revelar uma estrutura tubular e firme ("massa em formato de salsicha"). A <strong>ultrassonografia abdominal</strong> é o método de eleição, mostrando o sinal patognomônico de "alvo" ou "cebola".</p>
+
+                        <h4>Tratamento e Técnica Cirúrgica</h4>
+                        <p>O tratamento cirúrgico envolve a tentativa de redução manual. Se o tecido estiver inviável (edemaciado, friável), realiza-se a <strong>enterectomia e anastomose</strong>. O prognóstico é bom, mas a causa base (enterite) deve ser tratada para evitar recidivas.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Colon/Anal Section -->
+            <section id="anal" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Intestino Grosso e Região Anal</h2>
+                <div class="space-y-10">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Megacólon</h3>
+                        <h4>Manifestações Clínicas</h4>
+                        <p>Obstipação crônica e intratável, tenesmo improdutivo, fezes ressecadas (fecalomas) e, ocasionalmente, diarreia paradoxal.</p>
+                        
+                        <h4>Exame Físico e Exames Complementares</h4>
+                        <p>A palpação abdominal revela um cólon de grande diâmetro e repleto de fezes petrificadas. O toque retal é importante para descartar estenoses. A <strong>radiografia abdominal</strong> confirma a dilatação colônica (diâmetro > 1.5x o comprimento de L7) e a carga fecal.</p>
+
+                        <h4>Tratamento e Técnica Cirúrgica</h4>
+                        <p>O tratamento definitivo para casos idiopáticos e refratários é a <strong>colectomia subtotal</strong>. A técnica envolve a ressecção de 90-95% do cólon e a realização de uma anastomose ileocólica ou cecocólica. O prognóstico para a resolução da obstipação é excelente.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-4">Prolapso Retal</h3>
+                        <h4>Manifestações Clínicas e Exame Físico</h4>
+                        <p>Exposição de um tecido cilíndrico através do ânus. O diagnóstico diferencial com intussuscepção é crucial e feito ao tentar passar uma sonda romba entre a massa e a margem anal (no prolapso, a passagem é bloqueada).</p>
+                        
+                        <h4>Tratamento e Técnica Cirúrgica</h4>
+                        <p>Depende da viabilidade tecidual. Tecido viável: redução manual e <strong>sutura em bolsa de fumo</strong> temporária. Tecido necrosado: <strong>amputação retal</strong>. Casos recorrentes: <strong>colopexia</strong>. O prognóstico é bom, mas a recorrência é comum se a causa do tenesmo persistir.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Suture Principles Section -->
+            <section id="sutura" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Princípios de Sutura no TGI</h2>
+                <p class="text-lg text-gray-600 mb-8">A escolha da técnica de sutura é um dos fatores mais críticos para o sucesso cirúrgico. O gráfico abaixo compara as abordagens padrão.</p>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="chart-container">
+                        <canvas id="sutureChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Table Section -->
+            <section id="tabela" class="content-section hidden">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Tabela de Procedimentos Cirúrgicos</h2>
+                <p class="text-lg text-gray-600 mb-8">Esta tabela resume as principais afecções do TGI, suas indicações cirúrgicas, os procedimentos de eleição e pontos-chave da técnica.</p>
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 font-semibold">Afecção</th>
+                                <th class="p-4 font-semibold">Indicação Cirúrgica</th>
+                                <th class="p-4 font-semibold">Procedimento Principal</th>
+                                <th class="p-4 font-semibold">Pontos-Chave da Técnica</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr>
+                                <td class="p-4">Fístula Oronasal</td>
+                                <td class="p-4">Comunicação persistente</td>
+                                <td class="p-4">Plastia com Retalho Mucoperiosteal</td>
+                                <td class="p-4">Fechamento sem tensão, debridamento das bordas.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4">Mucocele Salivar</td>
+                                <td class="p-4">Aumento de volume persistente</td>
+                                <td class="p-4">Sialoadenectomia</td>
+                                <td class="p-4">Remoção completa do complexo glandular (mandibular/sublingual).</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4">Obstrução Esofágica</td>
+                                <td class="p-4">Corpo estranho não removível via endoscopia</td>
+                                <td class="p-4">Esofagotomia</td>
+                                <td class="p-4">Sutura em dois planos, risco de deiscência.</td>
+                            </tr>
+                             <tr>
+                                <td class="p-4">SDVG</td>
+                                <td class="p-4">Emergência após estabilização</td>
+                                <td class="p-4">Gastropexia Incisional</td>
+                                <td class="p-4">Fixação do antro pilórico na parede abdominal direita.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4">Obstrução Intestinal</td>
+                                <td class="p-4">Corpo estranho / Tecido inviável</td>
+                                <td class="p-4">Enterotomia / Enterectomia</td>
+                                <td class="p-4">Sutura em plano único, aposicional, incluindo submucosa.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4">Megacólon Felino</td>
+                                <td class="p-4">Obstipação refratária</td>
+                                <td class="p-4">Colectomia Subtotal</td>
+                                <td class="p-4">Ressecção de 90-95% do cólon, anastomose ileocólica.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.nav-item');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            document.getElementById('tgi-nav').addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetLink = e.target.closest('.nav-item');
+                if (!targetLink) return;
+
+                const targetId = targetLink.dataset.target;
+                
+                navItems.forEach(item => item.classList.remove('active'));
+                targetLink.classList.add('active');
+
+                contentSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+            });
+
+            const ctx = document.getElementById('sutureChart').getContext('2d');
+            const sutureChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Esôfago', 'Estômago', 'Intestinos (Delgado/Grosso)'],
+                    datasets: [{
+                        label: 'Nº de Camadas de Sutura',
+                        data: [2, 2, 1],
+                        backgroundColor: [
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 2,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    if (value === 1) return 'Plano Único';
+                                    if (value === 2) return 'Plano Duplo';
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Comparativo de Camadas de Sutura no TGI',
+                            font: { size: 18 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    label += (value === 1) ? 'Plano Único' : 'Plano Duplo';
+                                    return label;
+                                },
+                                afterLabel: function(context) {
+                                    const organ = context.label;
+                                    if (organ === 'Esôfago') {
+                                        return 'Justificativa: Reforço extra devido à ausência de serosa e tensão constante.';
+                                    }
+                                    if (organ === 'Estômago') {
+                                        return 'Justificativa: Garante vedação máxima contra o conteúdo ácido e corrosivo.';
+                                    }
+                                    if (organ.includes('Intestinos')) {
+                                        return 'Justificativa: Preserva a vascularização e evita a estenose do lúmen.';
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
